@@ -1,0 +1,164 @@
+# DevGrid: Developer Social Graph & Knowledge Hub Schema
+# Implementing 100% of concepts from roadmap.sh / graphql.pdf
+
+enum UserRole {
+    DEVELOPER
+    MODERATOR
+    ADMIN
+}
+
+enum PostCategory {
+    TUTORIAL
+    SHOWCASE
+    DISCUSSION
+    NEWS
+}
+
+type User {
+    id: ID!
+    username: String!
+    avatar: String
+    githubHandle: String
+    reputation: Int!
+    role: UserRole!
+    posts: [Post!]!
+    comments: [Comment!]!
+    repositories: [Repository!]!
+}
+
+type Repository {
+    id: ID!
+    name: String!
+    stars: Int!
+    url: String!
+    owner: User!
+}
+
+type Post {
+    id: ID!
+    title: String!
+    content: String
+    codeSnippet: String
+    postType: String!
+    category: PostCategory!
+    upvotes: Int!
+    isPublished: Boolean!
+    createdAt: String!
+    author: User!
+    comments: [Comment!]!
+}
+
+type Comment {
+    id: ID!
+    text: String!
+    likes: Int!
+    createdAt: String!
+    post: Post!
+    author: User!
+}
+
+# --- Interface & Union Polymorphism Concepts ---
+interface FeedItem {
+    id: ID!
+    title: String!
+    createdAt: String!
+    author: User!
+    upvotes: Int!
+}
+
+type ArticlePost implements FeedItem {
+    id: ID!
+    title: String!
+    content: String!
+    createdAt: String!
+    author: User!
+    upvotes: Int!
+}
+
+type CodeSnippetPost implements FeedItem {
+    id: ID!
+    title: String!
+    codeSnippet: String!
+    createdAt: String!
+    author: User!
+    upvotes: Int!
+}
+
+union SearchResult = User | ArticlePost | CodeSnippetPost
+
+# --- Pagination Concepts ---
+type PostEdge {
+    node: Post!
+    cursor: String!
+}
+
+type PageInfo {
+    hasNextPage: Boolean!
+    endCursor: String
+}
+
+type PostConnection {
+    edges: [PostEdge!]!
+    pageInfo: PageInfo!
+}
+
+# --- Mutation Input & Result Complex Objects ---
+input PostInput {
+    title: String!
+    content: String!
+    codeSnippet: String
+    postType: String!
+    category: PostCategory!
+    authorId: ID!
+}
+
+type PostWithCommentResult {
+    post: Post!
+    comment: Comment!
+    success: Boolean!
+    message: String!
+}
+
+type PerformanceReport {
+    mode: String!
+    totalPostsFetched: Int!
+    simulatedSqlQueriesExecuted: Int!
+    executionTimeMs: Int!
+    explanation: String!
+}
+
+# --- Root Queries ---
+type Query {
+    # Basic Query with Optional Arguments (Filtering & Sizing)
+    allPosts(category: PostCategory, limit: Int = 20): [Post!]!
+    postById(id: ID!): Post
+    postsByAuthor(authorId: ID!): [Post!]!
+
+    # Users & Profiles
+    allUsers: [User!]!
+    userByUsername(username: String!): User
+
+    # Interfaces & Unions (Polymorphic Queries)
+    feedItems: [FeedItem!]!
+    searchFeed(query: String!): [SearchResult!]!
+
+    # Pagination Mastery Lab
+    postsOffset(limit: Int = 5, offset: Int = 0): [Post!]!
+    postsConnection(first: Int = 4, after: String): PostConnection!
+
+    # Execution & DataLoader Benchmark Lab (Solving N+1 Queries)
+    benchmarkDataLoader(useDataLoader: Boolean = true): PerformanceReport!
+}
+
+# --- Root Mutations ---
+type Mutation {
+    # Single Operation using Input Object
+    createPost(input: PostInput!): Post!
+
+    # Multi-action operation returning compound results
+    createPostAndComment(postInput: PostInput!, initialComment: String!): PostWithCommentResult!
+
+    # Simple Atomic Updates (Optimistic UI demonstrations in Apollo Client)
+    upvotePost(postId: ID!): Post!
+    createComment(postId: ID!, authorId: ID!, text: String!): Comment!
+}

@@ -145,5 +145,3 @@ npm run dev
 3. **Verify Persistent Data via GraphiQL Sandbox:**
    - Open `http://localhost:8080/graphiql` in your browser.
    - Execute custom queries to confirm that any articles or upvotes you created in the React interface remain safely persisted inside your Dockerized PostgreSQL tables!
-#   g r a p h q l - t u t o r i a l  
- 
